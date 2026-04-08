@@ -2225,22 +2225,12 @@ if (conv) conv.scrollTop = conv.scrollHeight;
         if current_conv["title"] == "محادثة جديدة":
             current_conv["title"] = home_question[:40] + ("..." if len(home_question) > 40 else "")
 
-        # Use streaming for live typing effect
-        placeholder = st.empty()
-        full_response = ""
-        try:
-            for chunk in chat_response_stream(api_key, home_question, current_conv["messages"][:-1]):
-                full_response += chunk
-                placeholder.markdown(
-                    f'<div style="background:#fff;border:1px solid #f0e0e0;border-right:3px solid #8B1A1A;border-radius:12px;padding:1rem;margin:0.5rem 0;direction:rtl;text-align:right;line-height:1.9;">{full_response}▊</div>',
-                    unsafe_allow_html=True
-                )
-        except Exception as e:
-            full_response = local_chat(home_question)
-        placeholder.empty()
-
-        if not full_response.strip():
+        # Show thinking indicator
+        with st.spinner("المستشار القانوني يحلل الحالة..."):
             full_response = chat_response(api_key, home_question, current_conv["messages"][:-1])
+
+        if not full_response or not full_response.strip():
+            full_response = local_chat(home_question)
 
         current_conv["messages"].append({"role": "assistant", "content": full_response})
         current_conv["updated"] = datetime.datetime.now().isoformat()
