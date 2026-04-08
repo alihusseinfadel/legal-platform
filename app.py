@@ -1825,7 +1825,7 @@ with st.sidebar:
     # Strip emoji for logic
     page = page.split("  ", 1)[-1] if "  " in page else page
 
-    # === API Settings (loaded from secrets or env) ===
+    # === API Settings (loaded from secrets or env - NEVER hardcode keys) ===
     api_key = ""
     try:
         if hasattr(st, 'secrets') and "openrouter_api_key" in st.secrets:
@@ -1834,9 +1834,6 @@ with st.sidebar:
         pass
     if not api_key:
         api_key = os.environ.get("OPENROUTER_API_KEY", "").strip()
-    # Hardcoded fallback for local development
-    if not api_key:
-        api_key = "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"
 
     st.markdown("""
     <div class="sb-label"><span class="sb-label-bar"></span>الذكاء الاصطناعي</div>
