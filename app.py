@@ -7,11 +7,27 @@ import base64
 import io
 
 st.set_page_config(
-    page_title="منصة الاستشارات القانونية الادارية",
-    page_icon="",
+    page_title="منصة القانون الاداري - جامعة ديالى",
+    page_icon="⚖️",
     layout="wide",
     initial_sidebar_state="expanded",
+    menu_items={
+        'About': "منصة القانون الاداري - جامعة ديالى\n\nتصميم: أ.م. علي حسين فاضل\nكادر وحدة تكنولوجيا المعلومات"
+    }
 )
+
+# === PWA Meta Tags for mobile installation ===
+st.markdown("""
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="القانون الاداري">
+<meta name="application-name" content="منصة القانون الاداري">
+<meta name="theme-color" content="#8B1A1A">
+<meta name="description" content="منصة القانون الاداري - جامعة ديالى - استشارات قانونية ذكية">
+<link rel="manifest" href="data:application/manifest+json;charset=utf-8;base64,ewogICJuYW1lIjogItmF2YbYtdipINin2YTZgtin2YbZiNmGINin2YTYp9iv2KfYsdmKIC0g2KzYp9mF2LnYqSDYr9mK2KfZhNmJIiwKICAic2hvcnRfbmFtZSI6ICLYp9mE2YLYp9mG2YjZhiDYp9mE2KfYr9in2LHZiiIsCiAgImRlc2NyaXB0aW9uIjogItmF2YbYtdipINin2YTYp9iz2KrYtNin2LHYp9iqINin2YTZgtin2YbZiNmG2YrYqSDYp9mE2KfYr9in2LHZitipIiwKICAic3RhcnRfdXJsIjogIi8iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJvcmllbnRhdGlvbiI6ICJwb3J0cmFpdCIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiIzhCMUExQSIsCiAgInRoZW1lX2NvbG9yIjogIiM4QjFBMUEiLAogICJsYW5nIjogImFyIiwKICAiZGlyIjogInJ0bCIKfQ==">
+""", unsafe_allow_html=True)
 
 st.markdown("""
 <style>
@@ -101,6 +117,89 @@ st.markdown("""
     .main p, .main li, .main label, .bot-bubble, .user-bubble,
     .msg-bubble, .law-card p, .consultation-card p {
         font-size: var(--user-font-size, 16px) !important;
+    }
+
+    /* ========== MOBILE RESPONSIVE (< 768px) ========== */
+    @media screen and (max-width: 768px) {
+        .main .block-container {
+            padding: 0.5rem !important;
+            max-width: 100% !important;
+        }
+        /* Sidebar collapses to drawer on mobile - Streamlit handles this */
+        [data-testid="stSidebar"] {
+            min-width: 85vw !important;
+            width: 85vw !important;
+        }
+        [data-testid="stSidebar"] > div:first-child {
+            min-width: 85vw !important;
+            width: 85vw !important;
+        }
+        /* Hero + banners */
+        .header-banner {
+            padding: 1rem !important;
+            margin-bottom: 1rem !important;
+        }
+        .header-banner h1 { font-size: 1.2rem !important; }
+        .header-banner p { font-size: 0.85rem !important; }
+        .page-title { font-size: 1.3rem !important; }
+        /* Stat cards - wrap better */
+        .stat-card {
+            padding: 0.8rem !important;
+            margin-bottom: 0.5rem;
+        }
+        .stat-card h2 { font-size: 1.5rem !important; }
+        .stat-card p { font-size: 0.75rem !important; }
+        /* Chat conversation full width */
+        .chat-conversation {
+            max-height: 400px !important;
+            padding: 0.8rem 0.5rem !important;
+        }
+        .msg-content { max-width: 85% !important; }
+        .msg-avatar { width: 34px !important; height: 34px !important; }
+        .msg-bubble { padding: 0.7rem 0.9rem !important; font-size: 0.88rem !important; }
+        /* Law cards */
+        .law-card { padding: 0.8rem !important; }
+        .law-card h4 { font-size: 0.95rem !important; }
+        .law-card p { font-size: 0.85rem !important; }
+        /* Consultation cards */
+        .consultation-card { padding: 0.8rem !important; }
+        /* Buttons full width on mobile */
+        .stButton > button { padding: 0.5rem !important; font-size: 0.85rem !important; }
+        /* Text inputs */
+        .stTextInput input, .stTextArea textarea {
+            font-size: 16px !important; /* Prevents iOS zoom */
+        }
+        /* Columns stack on mobile */
+        [data-testid="stHorizontalBlock"] {
+            flex-wrap: wrap !important;
+            gap: 0.5rem !important;
+        }
+        [data-testid="stHorizontalBlock"] > div {
+            min-width: 100% !important;
+            flex: 1 1 100% !important;
+        }
+        /* Smaller watermark on mobile */
+        [data-testid="stAppViewContainer"]::before {
+            background-size: 120vw auto !important;
+            opacity: 0.05 !important;
+        }
+        /* Tabs scroll horizontally */
+        div[data-testid="stTabs"] [data-baseweb="tab-list"] {
+            overflow-x: auto !important;
+            flex-wrap: nowrap !important;
+        }
+    }
+
+    /* ========== TABLET (768px - 1024px) ========== */
+    @media screen and (min-width: 769px) and (max-width: 1024px) {
+        .main .block-container {
+            max-width: 95% !important;
+            padding: 1rem !important;
+        }
+        [data-testid="stSidebar"] {
+            min-width: 280px !important;
+            width: 280px !important;
+        }
     }
     /* Hide "Press Enter to apply" hint */
     [data-testid="InputInstructions"] { display: none !important; }
@@ -1245,6 +1344,96 @@ LAWS_DB = [
          {"num": "المادة 30", "text": "ترفع الدعوى بعريضة تودع في قلم كتاب المحكمة"},
          {"num": "المادة 187", "text": "يجوز الطعن تمييزا في الاحكام الصادرة من محاكم الاستئناف"},
      ]},
+    {"id": 10, "title": "قانون التعليم العالي والبحث العلمي رقم (40) لسنة 1988", "category": "تعليم عالي",
+     "summary": "ينظم قطاع التعليم العالي والبحث العلمي ويحدد مهام الوزارة والجامعات ومراكز البحث.",
+     "tags": ["تعليم عالي", "جامعات", "بحث علمي", "تدريسيين"],
+     "articles": [
+         {"num": "المادة 1", "text": "تتولى وزارة التعليم العالي والبحث العلمي رسم السياسة العامة للتعليم الجامعي والبحث العلمي"},
+         {"num": "المادة 5", "text": "تتمتع الجامعات بالاستقلال الاداري والمالي والعلمي"},
+         {"num": "المادة 14", "text": "يكون التعيين في الملاك التدريسي بناءً على شهادات علمية معتمدة وخبرة اكاديمية"},
+         {"num": "المادة 22", "text": "تحدد الالقاب العلمية: مدرس مساعد، مدرس، استاذ مساعد، استاذ"},
+     ]},
+    {"id": 11, "title": "قانون هيئة النزاهة رقم (30) لسنة 2011", "category": "نزاهة ومكافحة فساد",
+     "summary": "ينظم عمل هيئة النزاهة المستقلة لمكافحة الفساد الاداري والمالي ومتابعة الذمم المالية.",
+     "tags": ["نزاهة", "فساد", "كشف ذمة", "رقابة"],
+     "articles": [
+         {"num": "المادة 1", "text": "هيئة النزاهة هيئة مستقلة تخضع لرقابة مجلس النواب"},
+         {"num": "المادة 8", "text": "تتولى الهيئة مهمة منع ومكافحة الفساد والتحقيق في قضاياه"},
+         {"num": "المادة 17", "text": "يلتزم الموظفون بتقديم كشف ذمتهم المالية خلال مدة محددة"},
+         {"num": "المادة 23", "text": "عدم تقديم كشف الذمة المالية يعد مخالفة ادارية توجب المسائلة"},
+     ]},
+    {"id": 12, "title": "قانون حق الحصول على المعلومة رقم (18) لسنة 2013", "category": "حقوق ومعلومات",
+     "summary": "يكفل حق المواطنين في الاطلاع على المعلومات الرسمية لدى الدوائر الحكومية.",
+     "tags": ["حق المعلومة", "شفافية", "وصول"],
+     "articles": [
+         {"num": "المادة 2", "text": "لكل شخص الحق في الحصول على المعلومات المتوفرة لدى الجهات المشمولة بأحكام هذا القانون"},
+         {"num": "المادة 7", "text": "يقدم الطلب كتابياً ويتم الرد خلال مدة لا تتجاوز 15 يوم عمل"},
+         {"num": "المادة 12", "text": "يجوز رفض الطلب في حالات محددة كالامن الوطني او الخصوصية الشخصية"},
+     ]},
+    {"id": 13, "title": "قانون المحافظات غير المنتظمة في اقليم رقم (21) لسنة 2008", "category": "ادارة محلية",
+     "summary": "ينظم صلاحيات المحافظات والمجالس المحلية وعلاقتها بالحكومة الاتحادية.",
+     "tags": ["محافظات", "مجلس محلي", "لامركزية", "محافظ"],
+     "articles": [
+         {"num": "المادة 2", "text": "المحافظة وحدة ادارية تتمتع بالشخصية المعنوية والاستقلال المالي والاداري"},
+         {"num": "المادة 7", "text": "يتكون مجلس المحافظة من اعضاء يُنتخبون بالاقتراع السري العام"},
+         {"num": "المادة 24", "text": "للمحافظ صلاحيات تنفيذية تشمل ادارة شؤون المحافظة والاشراف على الدوائر"},
+     ]},
+    {"id": 14, "title": "قانون البلديات رقم (165) لسنة 1964", "category": "ادارة محلية",
+     "summary": "ينظم عمل البلديات وصلاحياتها في الخدمات البلدية والتخطيط العمراني.",
+     "tags": ["بلديات", "خدمات", "تخطيط عمراني"],
+     "articles": [
+         {"num": "المادة 1", "text": "البلدية مؤسسة عامة تتمتع بالشخصية المعنوية"},
+         {"num": "المادة 9", "text": "تتولى البلدية تقديم الخدمات البلدية ضمن حدودها الادارية"},
+         {"num": "المادة 15", "text": "يجوز للبلدية فرض رسوم مقابل الخدمات التي تقدمها وفق الانظمة"},
+     ]},
+    {"id": 15, "title": "قانون الاحزاب السياسية رقم (36) لسنة 2015", "category": "احزاب وسياسة",
+     "summary": "ينظم تأسيس الاحزاب السياسية وحقوقها والتزاماتها القانونية.",
+     "tags": ["احزاب", "سياسة", "انتخابات"],
+     "articles": [
+         {"num": "المادة 3", "text": "تأسيس الاحزاب السياسية حق يكفله الدستور"},
+         {"num": "المادة 8", "text": "يشترط في مؤسسي الحزب ان يكونوا عراقيين ومن غير المحكومين بجرائم مخلة بالشرف"},
+         {"num": "المادة 25", "text": "يحظر على الحزب اقامة تنظيمات عسكرية او شبه عسكرية"},
+     ]},
+    {"id": 16, "title": "قانون الضمان الاجتماعي للعمال رقم (39) لسنة 1971", "category": "ضمان اجتماعي",
+     "summary": "ينظم حقوق العمال في الضمان الاجتماعي من اصابات عمل وتقاعد ومنافع اخرى.",
+     "tags": ["ضمان اجتماعي", "عمال", "اصابات", "تقاعد"],
+     "articles": [
+         {"num": "المادة 2", "text": "يسري هذا القانون على العمال في القطاع الخاص والمختلط والتعاوني"},
+         {"num": "المادة 8", "text": "يستحق العامل التعويض عن اصابات العمل وامراض المهنة"},
+         {"num": "المادة 15", "text": "تحتسب مساهمة صاحب العمل والعامل في صندوق الضمان الاجتماعي"},
+     ]},
+    {"id": 17, "title": "قانون منع الاتجار بالبشر رقم (28) لسنة 2012", "category": "حقوق انسان",
+     "summary": "يجرم الاتجار بالبشر ويحمي الضحايا ويفرض عقوبات صارمة على مرتكبيه.",
+     "tags": ["اتجار بشر", "حقوق انسان", "عقوبات جنائية"],
+     "articles": [
+         {"num": "المادة 1", "text": "الاتجار بالبشر هو استدراج او نقل او ايواء اشخاص بقصد استغلالهم"},
+         {"num": "المادة 6", "text": "يعاقب بالسجن المؤبد كل من ارتكب جريمة الاتجار بالبشر"},
+         {"num": "المادة 10", "text": "توفر الدولة الحماية والمأوى للضحايا وتقدم لهم المساعدة القانونية"},
+     ]},
+    {"id": 18, "title": "قانون مفوضية حقوق الانسان رقم (53) لسنة 2008", "category": "حقوق انسان",
+     "summary": "ينشئ المفوضية العليا لحقوق الانسان لحماية الحقوق والحريات العامة.",
+     "tags": ["حقوق انسان", "حريات", "مفوضية"],
+     "articles": [
+         {"num": "المادة 1", "text": "تؤسس المفوضية العليا لحقوق الانسان كهيئة مستقلة"},
+         {"num": "المادة 5", "text": "تتولى المفوضية تلقي الشكاوى المتعلقة بانتهاكات حقوق الانسان"},
+         {"num": "المادة 9", "text": "للمفوضية صلاحية التحقيق في الشكاوى واصدار التوصيات للجهات المعنية"},
+     ]},
+    {"id": 19, "title": "قانون رعاية القاصرين رقم (78) لسنة 1980", "category": "رعاية",
+     "summary": "ينظم رعاية القاصرين وادارة اموالهم وحقوقهم القانونية.",
+     "tags": ["قاصر", "ولاية", "وصاية", "رعاية"],
+     "articles": [
+         {"num": "المادة 3", "text": "القاصر هو من لم يبلغ الثامنة عشرة من العمر"},
+         {"num": "المادة 12", "text": "تكون الولاية على مال القاصر للاب ثم للجد لاب ثم للوصي"},
+         {"num": "المادة 28", "text": "لا يجوز التصرف في اموال القاصر الا بإذن المحكمة المختصة"},
+     ]},
+    {"id": 20, "title": "قانون التنظيم النقابي للعمال رقم (52) لسنة 1987", "category": "عمال ونقابات",
+     "summary": "ينظم حق العمال في تشكيل النقابات المهنية والانضمام اليها والدفاع عن حقوقهم.",
+     "tags": ["نقابات", "عمال", "حقوق عمالية"],
+     "articles": [
+         {"num": "المادة 1", "text": "للعمال حق تشكيل النقابات والانضمام اليها بحرية"},
+         {"num": "المادة 7", "text": "تتولى النقابة الدفاع عن حقوق العمال ومصالحهم المشروعة"},
+         {"num": "المادة 15", "text": "يحق للنقابة التفاوض الجماعي نيابة عن اعضائها"},
+     ]},
 ]
 
 CATEGORIES = sorted(list(set(law["category"] for law in LAWS_DB)))
@@ -1920,6 +2109,25 @@ with st.sidebar:
 **3.** ارفع وثيقة لتحليلها
 
 **4.** تصفح القوانين والمصطلحات
+        """)
+
+    with st.expander("📱  تثبيت على الهاتف"):
+        st.markdown("""
+**للاندرويد (Chrome):**
+
+1. افتح الموقع في Chrome
+2. اضغط على القائمة (⋮)
+3. اختر **"Add to Home screen"**
+4. اضغط **Add**
+
+**للايفون (Safari):**
+
+1. افتح الموقع في Safari
+2. اضغط زر المشاركة (□↑)
+3. اختر **"Add to Home Screen"**
+4. اضغط **Add**
+
+بعدها سيظهر كتطبيق على شاشتك الرئيسية تماماً مثل أي تطبيق.
         """)
 
     # === [6] Designer Credits ===
