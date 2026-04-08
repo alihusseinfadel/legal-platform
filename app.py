@@ -2061,22 +2061,6 @@ with st.sidebar:
 
     st.markdown('<div class="sb-divider"></div>', unsafe_allow_html=True)
 
-    # === [4] AI Status (compact) ===
-    ai_state = "متصل" if api_key else "غير متصل"
-    ai_cls = "sb-status-on" if api_key else "sb-status-off"
-    ai_icon = "✓" if api_key else "!"
-    st.markdown(f"""
-    <div class="sb-status {ai_cls}">
-        <div class="sb-status-icon">{ai_icon}</div>
-        <div class="sb-status-text">
-            <div class="sb-status-t">الذكاء الاصطناعي - {ai_state}</div>
-            <div class="sb-status-d">GPT-OSS 120B</div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-
-    st.markdown('<div class="sb-divider"></div>', unsafe_allow_html=True)
-
     # === [5] Settings & Help (collapsed) ===
     st.markdown('<div class="sb-label"><span class="sb-label-bar"></span>الاعدادات</div>', unsafe_allow_html=True)
 
