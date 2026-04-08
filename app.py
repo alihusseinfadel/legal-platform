@@ -188,6 +188,13 @@ st.markdown("""
         position: relative; z-index: 1;
     }
 
+    /* === Sidebar Divider === */
+    .sb-divider {
+        height: 1px;
+        background: linear-gradient(90deg, transparent, rgba(212,165,116,0.25), transparent);
+        margin: 1.2rem 0;
+    }
+
     /* === Sidebar Labels (Section Titles) === */
     .sb-label {
         color: #d4a574 !important; font-size: 0.68rem; font-weight: 800;
@@ -1807,13 +1814,13 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-    # === Navigation ===
-    st.markdown('<div class="sb-label"><span class="sb-label-bar"></span>التنقل</div>', unsafe_allow_html=True)
+    # === [1] Navigation Menu ===
+    st.markdown('<div class="sb-label"><span class="sb-label-bar"></span>القائمة الرئيسية</div>', unsafe_allow_html=True)
     nav_options = [
         "🏠  الرئيسية",
+        "💬  المستشار القانوني",
         "📄  تحليل الوثائق",
         "📚  قاعدة القوانين",
-        "💬  المستشار القانوني",
         "📖  قاموس المصطلحات",
         "⚖️  دراسات الحالة",
         "📋  ادارة الاستشارات"
@@ -1822,10 +1829,9 @@ with st.sidebar:
         nav_options.append("🛡️  لوحة الادمن")
 
     page = st.radio("nav", nav_options, label_visibility="collapsed")
-    # Strip emoji for logic
     page = page.split("  ", 1)[-1] if "  " in page else page
 
-    # === API Settings (loaded from secrets or env - NEVER hardcode keys) ===
+    # === [2] API Key (silent load) ===
     api_key = ""
     try:
         if hasattr(st, 'secrets') and "openrouter_api_key" in st.secrets:
@@ -1835,24 +1841,15 @@ with st.sidebar:
     if not api_key:
         api_key = os.environ.get("OPENROUTER_API_KEY", "").strip()
 
-    st.markdown("""
-    <div class="sb-label"><span class="sb-label-bar"></span>الذكاء الاصطناعي</div>
-    <div class="sb-status sb-status-on">
-        <div class="sb-status-icon">✓</div>
-        <div class="sb-status-text">
-            <div class="sb-status-t">متصل بالذكاء الاصطناعي</div>
-            <div class="sb-status-d">OpenRouter • GPT-OSS 120B</div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    st.markdown('<div class="sb-divider"></div>', unsafe_allow_html=True)
 
-    # === Statistics ===
+    # === [3] Quick Stats (compact) ===
     cons_s = st.session_state.data.get("consultations", [])
     anl_s = st.session_state.data.get("analyses", [])
     ta_s = sum(len(l["articles"]) for l in LAWS_DB)
 
     st.markdown(f"""
-    <div class="sb-label"><span class="sb-label-bar"></span>احصائيات</div>
+    <div class="sb-label"><span class="sb-label-bar"></span>نظرة سريعة</div>
     <div class="sb-stats-grid">
         <div class="sb-stat">
             <div class="sb-stat-num">{len(LAWS_DB)}</div>
@@ -1873,39 +1870,59 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-    # === Display Settings ===
-    st.markdown('<div class="sb-label"><span class="sb-label-bar"></span>اعدادات العرض</div>', unsafe_allow_html=True)
-    font_size_choice = st.select_slider(
-        "font_size",
-        options=["صغير", "متوسط", "كبير", "كبير جداً"],
-        value=st.session_state.font_size,
-        label_visibility="collapsed",
-        key="font_size_slider"
-    )
-    st.session_state.font_size = font_size_choice
+    st.markdown('<div class="sb-divider"></div>', unsafe_allow_html=True)
 
-    # === Help / About ===
-    st.markdown('<div class="sb-label"><span class="sb-label-bar"></span>المساعدة</div>', unsafe_allow_html=True)
-    with st.expander("عن المنصة"):
+    # === [4] AI Status (compact) ===
+    ai_state = "متصل" if api_key else "غير متصل"
+    ai_cls = "sb-status-on" if api_key else "sb-status-off"
+    ai_icon = "✓" if api_key else "!"
+    st.markdown(f"""
+    <div class="sb-status {ai_cls}">
+        <div class="sb-status-icon">{ai_icon}</div>
+        <div class="sb-status-text">
+            <div class="sb-status-t">الذكاء الاصطناعي - {ai_state}</div>
+            <div class="sb-status-d">GPT-OSS 120B</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    st.markdown('<div class="sb-divider"></div>', unsafe_allow_html=True)
+
+    # === [5] Settings & Help (collapsed) ===
+    st.markdown('<div class="sb-label"><span class="sb-label-bar"></span>الاعدادات</div>', unsafe_allow_html=True)
+
+    with st.expander("🔤  حجم الخط"):
+        font_size_choice = st.select_slider(
+            "font_size",
+            options=["صغير", "متوسط", "كبير", "كبير جداً"],
+            value=st.session_state.font_size,
+            label_visibility="collapsed",
+            key="font_size_slider"
+        )
+        st.session_state.font_size = font_size_choice
+
+    with st.expander("ℹ️  عن المنصة"):
         st.markdown("""
-**منصة القانون الاداري** هي مساعد ذكي يقدم:
+**منصة القانون الاداري** - مساعد ذكي يقدم:
 
 - استشارات قانونية فورية
 - تحليل الوثائق الرسمية
 - قاعدة قوانين شاملة
-- ادارة الاستشارات
-
-**تنبيه:** جميع الاجابات للاغراض التعليمية فقط.
+- قاموس مصطلحات ودراسات حالة
         """)
-    with st.expander("دليل الاستخدام"):
+
+    with st.expander("📘  دليل الاستخدام"):
         st.markdown("""
-1. اختر القسم من قائمة التنقل
-2. اكتب سؤالك في المستشار القانوني
-3. ارفع وثيقة لتحليلها
-4. تصفح القوانين بسهولة
+**1.** اختر القسم من القائمة
+
+**2.** اكتب سؤالك في المستشار القانوني
+
+**3.** ارفع وثيقة لتحليلها
+
+**4.** تصفح القوانين والمصطلحات
         """)
 
-    # === Credits ===
+    # === [6] Designer Credits ===
     st.markdown("""
     <div class="sb-credits">
         <div class="sb-credits-line"></div>
