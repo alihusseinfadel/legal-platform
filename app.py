@@ -1432,20 +1432,35 @@ def call_openrouter(api_key, system, user_content, use_vision=False):
         return {"ok": False, "text": err_msg}
 
 def analyze_document_ai(api_key, doc, question=""):
-    system = f"""You are a specialized Iraqi administrative legal consultant. Analyze documents and identify the legal basis. You MUST always respond in Arabic only.
+    system = f"""You are an experienced Iraqi administrative legal consultant. Analyze the document and provide a complete, specific legal analysis. You MUST respond in Arabic only.
 
-Available laws database:
+Iraqi Laws Database:
 {LAWS_CONTEXT}
 
-Your response must include these sections:
-## 1. ملخص الوثيقة (Document Summary)
-## 2. تحليل المشكلة القانونية (Legal Problem Analysis)
-## 3. السند القانوني (Legal Basis)
-For each basis: law name, article number and text, how it applies to the case
-## 4. التوصيات القانونية (Legal Recommendations)
-## 5. ملاحظات (Notes)
+REQUIRED response structure:
 
-Important: Write in Arabic. No emojis. Do NOT include any disclaimer about educational purposes or legal consultation."""
+## 1. ملخص الوثيقة
+Summarize the specific document content in 3-5 sentences. Show you understood the actual content.
+
+## 2. التحليل القانوني
+Provide a DIRECT analysis of this SPECIFIC document. Explain what the legal issues are and how they apply to THIS case. Do not just list laws - analyze the specific situation step by step.
+
+## 3. السند القانوني
+For each applicable law: cite exact article number and text, then explain how it applies to THIS specific document.
+
+## 4. التوصيات القانونية
+Provide specific, actionable recommendations for what the person should do next.
+
+## 5. ملاحظات
+Any additional important legal considerations.
+
+CRITICAL RULES:
+- NEVER just list laws without connecting them to the document's specific content
+- ALWAYS provide direct analysis of the actual scenario
+- Be specific, not generic
+- Write in formal Arabic
+- No emojis
+- Do NOT include any disclaimer"""
 
     if doc["type"] == "image":
         content = [
@@ -1636,7 +1651,32 @@ def chat_response_stream(api_key, question, history):
     if not api_key:
         yield local_chat(question)
         return
-    system = f"You are an Iraqi administrative legal consultant. You MUST always respond in Arabic only. Answer based on these Iraqi laws:\n{LAWS_CONTEXT}\n\nAlways mention the legal basis (law name and article number). Write in Arabic. No emojis. Do NOT include any disclaimer or note about educational purposes or that your answer is not a legal consultation."
+    system = f"""You are an experienced Iraqi administrative legal consultant specialized in Iraqi administrative law. You MUST respond in Arabic only, in clear and professional language.
+
+Iraqi Laws Database:
+{LAWS_CONTEXT}
+
+CRITICAL INSTRUCTIONS - You MUST follow this response structure for every question:
+
+## 1. فهم الحالة (Case Understanding)
+Summarize the specific situation/scenario in 2-3 sentences to show you understood it.
+
+## 2. التحليل القانوني (Legal Analysis)
+Analyze the specific scenario directly. Explain what laws apply and WHY they apply to THIS particular case. Discuss the legal reasoning step by step.
+
+## 3. السند القانوني (Legal Basis)
+Cite the specific articles from Iraqi laws that apply, with the exact article number and text. Explain how each article relates to the case.
+
+## 4. الخلاصة والتوصيات (Conclusion & Recommendations)
+Give a clear, direct answer to what the person should do. Be specific and actionable.
+
+RULES:
+- NEVER just list laws without analyzing the specific case
+- ALWAYS connect the legal articles to the actual scenario presented
+- Be direct and specific in your analysis
+- Write in formal Arabic
+- No emojis
+- Do NOT include any disclaimer about educational purposes"""
     msgs = [{"role": "system", "content": system}]
     for m in history[-6:]:
         msgs.append({"role": m["role"], "content": m["content"]})
@@ -1682,7 +1722,32 @@ def chat_response_stream(api_key, question, history):
 
 def chat_response(api_key, question, history):
     if api_key:
-        system = f"You are an Iraqi administrative legal consultant. You MUST always respond in Arabic only. Answer based on these Iraqi laws:\n{LAWS_CONTEXT}\n\nAlways mention the legal basis (law name and article number). Write in Arabic. No emojis. Do NOT include any disclaimer or note about educational purposes or that your answer is not a legal consultation."
+        system = f"""You are an experienced Iraqi administrative legal consultant specialized in Iraqi administrative law. You MUST respond in Arabic only, in clear and professional language.
+
+Iraqi Laws Database:
+{LAWS_CONTEXT}
+
+CRITICAL INSTRUCTIONS - You MUST follow this response structure for every question:
+
+## 1. فهم الحالة (Case Understanding)
+Summarize the specific situation/scenario in 2-3 sentences to show you understood it.
+
+## 2. التحليل القانوني (Legal Analysis)
+Analyze the specific scenario directly. Explain what laws apply and WHY they apply to THIS particular case. Discuss the legal reasoning step by step.
+
+## 3. السند القانوني (Legal Basis)
+Cite the specific articles from Iraqi laws that apply, with the exact article number and text. Explain how each article relates to the case.
+
+## 4. الخلاصة والتوصيات (Conclusion & Recommendations)
+Give a clear, direct answer to what the person should do. Be specific and actionable.
+
+RULES:
+- NEVER just list laws without analyzing the specific case
+- ALWAYS connect the legal articles to the actual scenario presented
+- Be direct and specific in your analysis
+- Write in formal Arabic
+- No emojis
+- Do NOT include any disclaimer about educational purposes"""
         msgs = [{"role": "system", "content": system}]
         for m in history[-6:]:
             msgs.append({"role": m["role"], "content": m["content"]})
@@ -1761,10 +1826,17 @@ with st.sidebar:
     page = page.split("  ", 1)[-1] if "  " in page else page
 
     # === API Settings (loaded from secrets or env) ===
+    api_key = ""
     try:
-        api_key = st.secrets.get("openrouter_api_key", "")
+        if hasattr(st, 'secrets') and "openrouter_api_key" in st.secrets:
+            api_key = str(st.secrets["openrouter_api_key"]).strip()
     except Exception:
-        api_key = os.environ.get("OPENROUTER_API_KEY", "")
+        pass
+    if not api_key:
+        api_key = os.environ.get("OPENROUTER_API_KEY", "").strip()
+    # Hardcoded fallback for local development
+    if not api_key:
+        api_key = "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"
 
     st.markdown("""
     <div class="sb-label"><span class="sb-label-bar"></span>الذكاء الاصطناعي</div>
