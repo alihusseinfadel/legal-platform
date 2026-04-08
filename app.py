@@ -890,12 +890,12 @@ if "admin_logged_in" not in st.session_state:
 if "font_size" not in st.session_state:
     st.session_state.font_size = "متوسط"
 if "conversations" not in st.session_state:
-    st.session_state.conversations = load_conversations()
+    # Start fresh - no previous conversations
+    st.session_state.conversations = []
 if "current_conv_id" not in st.session_state:
-    if st.session_state.conversations:
-        st.session_state.current_conv_id = st.session_state.conversations[0]["id"]
-    else:
-        st.session_state.current_conv_id = None
+    st.session_state.current_conv_id = None
+if "chat_messages" not in st.session_state:
+    st.session_state.chat_messages = []
 
 # Check URL query params for geo verification response
 try:
