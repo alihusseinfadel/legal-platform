@@ -1766,6 +1766,17 @@ with st.sidebar:
     except Exception:
         api_key = os.environ.get("OPENROUTER_API_KEY", "")
 
+    st.markdown("""
+    <div class="sb-label"><span class="sb-label-bar"></span>الذكاء الاصطناعي</div>
+    <div class="sb-status sb-status-on">
+        <div class="sb-status-icon">✓</div>
+        <div class="sb-status-text">
+            <div class="sb-status-t">متصل بالذكاء الاصطناعي</div>
+            <div class="sb-status-d">OpenRouter • GPT-OSS 120B</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
     # === Statistics ===
     cons_s = st.session_state.data.get("consultations", [])
     anl_s = st.session_state.data.get("analyses", [])
