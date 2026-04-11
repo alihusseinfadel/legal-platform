@@ -1792,7 +1792,8 @@ def chat_to_pdf(messages, title="محادثة المستشار القانوني"
         pdf.output(buf)
         buf.seek(0)
         return buf.getvalue()
-    except Exception:
+    except Exception as e:
+        st.error(f"PDF Error: {e}")
         return None
 
 def chat_response_stream(api_key, question, history):
@@ -2403,10 +2404,12 @@ if (conv) conv.scrollTop = conv.scrollHeight;
     st.markdown('<div style="margin-top:1rem;"></div>', unsafe_allow_html=True)
     has_msgs = len(current_conv.get("messages", [])) > 0
     if has_msgs:
+        pdf_data = None
+        pdf_error = None
         try:
             pdf_data = chat_to_pdf(current_conv["messages"], current_conv.get("title", "محادثة"))
-        except Exception:
-            pdf_data = None
+        except Exception as e:
+            pdf_error = str(e)
 
         if pdf_data and len(pdf_data) > 100:
             st.download_button(
@@ -2418,7 +2421,8 @@ if (conv) conv.scrollTop = conv.scrollHeight;
                 key="pdf_export_main"
             )
         else:
-            # PDF generation failed - offer text download as fallback
+            if pdf_error:
+                st.error(f"خطأ في توليد PDF: {pdf_error}")
             text_export = ""
             for m in current_conv["messages"]:
                 role = "المستخدم" if m["role"] == "user" else "المستشار"
