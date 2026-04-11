@@ -1699,101 +1699,103 @@ def analyze_locally(text, question=""):
     return r
 
 def chat_to_pdf(messages, title="محادثة المستشار القانوني"):
-    """Export chat messages to PDF with proper Arabic support using fpdf2"""
+    """Export chat messages to PDF with Arabic support"""
+    import re as _re
+    from fpdf import FPDF as _FPDF
+    import arabic_reshaper as _ar
+    from bidi.algorithm import get_display as _bidi
+
+    def _reshape(text):
+        try:
+            return _bidi(_ar.reshape(str(text)))
+        except Exception:
+            return str(text)
+
     try:
-        from fpdf import FPDF
-        import arabic_reshaper
-        from bidi.algorithm import get_display
-        import re
+        pdf = _FPDF(orientation='P', unit='mm', format='A4')
+        pdf.set_auto_page_break(auto=True, margin=15)
 
-        def ar(text):
-            try:
-                reshaped = arabic_reshaper.reshape(str(text))
-                return get_display(reshaped)
-            except Exception:
-                return str(text)
-
-        pdf = FPDF(orientation='P', unit='mm', format='A4')
-        pdf.set_auto_page_break(auto=True, margin=18)
-
-        font_paths = [
+        # Try fonts
+        _fonts = [
             ("C:/Windows/Fonts/tahoma.ttf", "C:/Windows/Fonts/tahomabd.ttf"),
             ("C:/Windows/Fonts/arial.ttf", "C:/Windows/Fonts/arialbd.ttf"),
+            ("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"),
         ]
-        font_registered = False
-        for regular, bold in font_paths:
-            if os.path.exists(regular):
-                try:
-                    pdf.add_font("Arabic", "", regular)
-                    pdf.add_font("Arabic", "B", bold if os.path.exists(bold) else regular)
-                    font_registered = True
-                    break
-                except Exception:
-                    continue
-        if not font_registered:
+        _ok = False
+        for _r, _b in _fonts:
+            if os.path.exists(_r):
+                pdf.add_font("Ar", "", _r)
+                pdf.add_font("Ar", "B", _b if os.path.exists(_b) else _r)
+                _ok = True
+                break
+        if not _ok:
             return None
 
         pdf.add_page()
+        _w = pdf.w - 20  # usable width
 
-        # Header
+        # Header bar
         pdf.set_fill_color(139, 26, 26)
-        pdf.rect(0, 0, pdf.w, 22, 'F')
+        pdf.rect(0, 0, pdf.w, 20, 'F')
         pdf.set_text_color(255, 255, 255)
-        pdf.set_font("Arabic", "B", 14)
-        pdf.set_xy(10, 5)
-        pdf.cell(pdf.w - 20, 12, ar("منصة القانون الاداري - جامعة ديالى"), align="R")
-        pdf.ln(22)
+        pdf.set_font("Ar", "B", 13)
+        pdf.set_xy(10, 4)
+        pdf.cell(_w, 10, _reshape("منصة القانون الاداري - جامعة ديالى"), align="R")
+        pdf.set_y(24)
 
-        # Title and date
-        pdf.set_font("Arabic", "B", 11)
-        pdf.set_text_color(139, 26, 26)
+        # Date
+        pdf.set_font("Ar", "", 8)
+        pdf.set_text_color(130, 130, 130)
         pdf.set_x(10)
-        pdf.cell(pdf.w - 20, 8, ar(title), align="R", new_x="LMARGIN", new_y="NEXT")
-        pdf.set_font("Arabic", "", 8)
-        pdf.set_text_color(120, 120, 120)
-        pdf.set_x(10)
-        pdf.cell(pdf.w - 20, 5, ar(f"التاريخ: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}"), align="R", new_x="LMARGIN", new_y="NEXT")
+        pdf.cell(_w, 5, _reshape(datetime.datetime.now().strftime('%Y-%m-%d %H:%M')), align="R")
+        pdf.ln(8)
+
+        # Line
         pdf.set_draw_color(139, 26, 26)
-        pdf.set_line_width(0.5)
-        pdf.line(10, pdf.get_y() + 2, pdf.w - 10, pdf.get_y() + 2)
-        pdf.ln(6)
+        pdf.line(10, pdf.get_y(), pdf.w - 10, pdf.get_y())
+        pdf.ln(5)
 
+        # Messages
         for msg in messages:
-            content = msg.get("content", "")
-            if not content:
+            txt = msg.get("content", "")
+            if not txt:
                 continue
-            clean = re.sub(r'\*\*(.+?)\*\*', r'\1', content)
-            clean = clean.replace("**", "").replace("##", "").replace("---", "")
 
-            role_name = "المستخدم" if msg.get("role") == "user" else "المستشار القانوني"
-            color = (139, 26, 26) if msg.get("role") == "user" else (100, 50, 50)
+            # Clean markdown
+            txt = _re.sub(r'\*\*(.+?)\*\*', r'\1', txt)
+            txt = txt.replace("**", "").replace("##", "").replace("---", "").replace("*", "")
 
-            pdf.set_font("Arabic", "B", 10)
-            pdf.set_text_color(*color)
+            # Role label
+            is_user = msg.get("role") == "user"
+            pdf.set_font("Ar", "B", 10)
+            pdf.set_text_color(139, 26, 26) if is_user else pdf.set_text_color(80, 40, 40)
             pdf.set_x(10)
-            pdf.cell(pdf.w - 20, 7, ar(role_name + ":"), align="R", new_x="LMARGIN", new_y="NEXT")
+            label = "المستخدم:" if is_user else "المستشار القانوني:"
+            pdf.cell(_w, 7, _reshape(label), align="R")
+            pdf.ln(7)
 
-            pdf.set_font("Arabic", "", 10)
-            pdf.set_text_color(50, 50, 50)
-            for para in clean.split('\n'):
-                para = para.strip()
-                if para:
+            # Content
+            pdf.set_font("Ar", "", 9)
+            pdf.set_text_color(40, 40, 40)
+            for line in txt.split('\n'):
+                line = line.strip()
+                if line:
                     pdf.set_x(10)
-                    pdf.multi_cell(w=pdf.w - 20, h=6, text=ar(para), align="R")
+                    pdf.multi_cell(w=_w, h=5.5, text=_reshape(line), align="R")
                 else:
-                    pdf.ln(3)
-            pdf.ln(4)
-            pdf.set_draw_color(200, 200, 200)
-            pdf.set_line_width(0.2)
-            pdf.line(20, pdf.get_y(), pdf.w - 20, pdf.get_y())
+                    pdf.ln(2)
+
+            # Separator
+            pdf.ln(3)
+            pdf.set_draw_color(210, 210, 210)
+            pdf.line(15, pdf.get_y(), pdf.w - 15, pdf.get_y())
             pdf.ln(4)
 
-        buf = io.BytesIO()
-        pdf.output(buf)
-        buf.seek(0)
-        return buf.getvalue()
-    except Exception as e:
-        st.error(f"PDF Error: {e}")
+        # Output
+        _buf = io.BytesIO()
+        pdf.output(_buf)
+        return _buf.getvalue()
+    except Exception:
         return None
 
 def chat_response_stream(api_key, question, history):
