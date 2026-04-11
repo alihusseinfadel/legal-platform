@@ -1699,144 +1699,127 @@ def analyze_locally(text, question=""):
     return r
 
 def chat_to_pdf(messages, title="محادثة المستشار القانوني"):
-    """Export chat messages to PDF with Arabic support"""
+    """Export chat messages to PDF with proper Arabic support using fpdf2"""
     try:
-        from reportlab.lib.pagesizes import A4
-        from reportlab.pdfgen import canvas
-        from reportlab.pdfbase import pdfmetrics
-        from reportlab.pdfbase.ttfonts import TTFont
-        from reportlab.lib.colors import HexColor
+        from fpdf import FPDF
         import arabic_reshaper
         from bidi.algorithm import get_display
 
-        # Register Arabic font
-        font_paths = [
-            "C:/Windows/Fonts/tahoma.ttf",
-            "C:/Windows/Fonts/tahomabd.ttf",
-            "C:/Windows/Fonts/arial.ttf",
-        ]
-        font_name = "Helvetica"
-        font_bold = "Helvetica-Bold"
-        for fp in font_paths:
-            if os.path.exists(fp):
-                try:
-                    pdfmetrics.registerFont(TTFont("ArabicFont", fp))
-                    font_name = "ArabicFont"
-                    bold_fp = fp.replace(".ttf", "bd.ttf")
-                    if os.path.exists(bold_fp):
-                        pdfmetrics.registerFont(TTFont("ArabicFontBold", bold_fp))
-                        font_bold = "ArabicFontBold"
-                    else:
-                        font_bold = "ArabicFont"
-                    break
-                except Exception:
-                    continue
-
         def ar(text):
-            """Shape Arabic text for PDF"""
+            """Reshape and reorder Arabic text for correct PDF display"""
             try:
                 reshaped = arabic_reshaper.reshape(str(text))
                 return get_display(reshaped)
             except Exception:
                 return str(text)
 
-        buf = io.BytesIO()
-        c = canvas.Canvas(buf, pagesize=A4)
-        width, height = A4
-        margin = 40
-        y = height - margin
+        class ArabicPDF(FPDF):
+            def header(self):
+                self.set_fill_color(139, 26, 26)
+                self.rect(0, 0, self.w, 22, 'F')
+                self.set_text_color(255, 255, 255)
+                self.set_font("Arabic", "B", 14)
+                self.set_xy(10, 5)
+                self.cell(self.w - 20, 12, ar("منصة القانون الاداري - جامعة ديالى"), align="R")
 
-        # Header
-        c.setFillColor(HexColor("#8B1A1A"))
-        c.rect(0, height - 70, width, 70, fill=1, stroke=0)
-        c.setFillColor(HexColor("#FFFFFF"))
-        c.setFont(font_bold, 18)
-        c.drawRightString(width - margin, height - 35, ar("منصة القانون الاداري - جامعة ديالى"))
-        c.setFont(font_name, 11)
-        c.drawRightString(width - margin, height - 55, ar(title))
+            def footer(self):
+                self.set_y(-12)
+                self.set_font("Arabic", "", 7)
+                self.set_text_color(150, 150, 150)
+                self.cell(0, 10, ar(f"جامعة ديالى - رئاسة الجامعة © 2026 | صفحة {self.page_no()}"), align="C")
 
-        # Date
-        y = height - 90
-        c.setFillColor(HexColor("#666666"))
-        c.setFont(font_name, 9)
-        c.drawRightString(width - margin, y, ar(f"التاريخ: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}"))
-        y -= 20
+        pdf = ArabicPDF(orientation='P', unit='mm', format='A4')
+        pdf.set_auto_page_break(auto=True, margin=18)
 
-        # Line separator
-        c.setStrokeColor(HexColor("#8B1A1A"))
-        c.setLineWidth(2)
-        c.line(margin, y, width - margin, y)
-        y -= 20
-
-        # Messages
-        def draw_wrapped_text(text, x, y_pos, max_width, font, size, color, align_right=True):
-            c.setFillColor(HexColor(color))
-            c.setFont(font, size)
-            # Split into lines
-            lines = []
-            for paragraph in text.split('\n'):
-                words = paragraph.split(' ')
-                current_line = ""
-                for word in words:
-                    test = (current_line + " " + word).strip() if current_line else word
-                    # Approximate width check
-                    if len(test) * (size * 0.5) < max_width:
-                        current_line = test
+        # Register Arabic font (Tahoma or Arial)
+        font_paths = [
+            ("C:/Windows/Fonts/tahoma.ttf", "C:/Windows/Fonts/tahomabd.ttf"),
+            ("C:/Windows/Fonts/arial.ttf", "C:/Windows/Fonts/arialbd.ttf"),
+        ]
+        font_registered = False
+        for regular, bold in font_paths:
+            if os.path.exists(regular):
+                try:
+                    pdf.add_font("Arabic", "", regular, uni=True)
+                    if os.path.exists(bold):
+                        pdf.add_font("Arabic", "B", bold, uni=True)
                     else:
-                        if current_line: lines.append(current_line)
-                        current_line = word
-                if current_line: lines.append(current_line)
-                if not words: lines.append("")
+                        pdf.add_font("Arabic", "B", regular, uni=True)
+                    font_registered = True
+                    break
+                except Exception:
+                    continue
 
-            for line in lines:
-                if y_pos < margin + 30:
-                    c.showPage()
-                    y_pos = height - margin
-                    c.setFont(font, size)
-                    c.setFillColor(HexColor(color))
-                shaped = ar(line)
-                if align_right:
-                    c.drawRightString(x, y_pos, shaped)
-                else:
-                    c.drawString(x, y_pos, shaped)
-                y_pos -= size + 6
-            return y_pos
+        if not font_registered:
+            return None
+
+        pdf.add_page()
+
+        # Title and date
+        pdf.set_font("Arabic", "B", 12)
+        pdf.set_text_color(139, 26, 26)
+        pdf.ln(18)
+        pdf.cell(0, 8, ar(title), align="R", new_x="LMARGIN", new_y="NEXT")
+        pdf.set_font("Arabic", "", 8)
+        pdf.set_text_color(120, 120, 120)
+        pdf.cell(0, 5, ar(f"التاريخ: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}"), align="R", new_x="LMARGIN", new_y="NEXT")
+
+        # Separator line
+        pdf.set_draw_color(139, 26, 26)
+        pdf.set_line_width(0.5)
+        pdf.line(10, pdf.get_y() + 2, pdf.w - 10, pdf.get_y() + 2)
+        pdf.ln(6)
 
         for msg in messages:
             role = msg.get("role", "")
             content = msg.get("content", "")
-            if not content: continue
+            if not content:
+                continue
+
+            # Clean markdown
+            import re
+            clean = content.replace("**", "").replace("##", "").replace("---", "")
+            clean = re.sub(r'\*\*(.+?)\*\*', r'\1', clean)
 
             if role == "user":
-                # User message (right-aligned, maroon background feel)
-                c.setFillColor(HexColor("#8B1A1A"))
-                c.setFont(font_bold, 11)
-                c.drawRightString(width - margin, y, ar("المستخدم:"))
-                y -= 18
-                y = draw_wrapped_text(content, width - margin - 15, y, width - 2 * margin - 30, font_name, 11, "#333333")
-                y -= 15
+                # User label
+                pdf.set_font("Arabic", "B", 10)
+                pdf.set_text_color(139, 26, 26)
+                pdf.cell(0, 7, ar("المستخدم:"), align="R", new_x="LMARGIN", new_y="NEXT")
+                # User message
+                pdf.set_font("Arabic", "", 10)
+                pdf.set_text_color(50, 50, 50)
+                for para in clean.split('\n'):
+                    para = para.strip()
+                    if para:
+                        pdf.multi_cell(0, 6, ar(para), align="R")
+                    else:
+                        pdf.ln(3)
+                pdf.ln(4)
             else:
+                # Bot label
+                pdf.set_font("Arabic", "B", 10)
+                pdf.set_text_color(100, 50, 50)
+                pdf.cell(0, 7, ar("المستشار القانوني:"), align="R", new_x="LMARGIN", new_y="NEXT")
                 # Bot message
-                c.setFillColor(HexColor("#a52a2a"))
-                c.setFont(font_bold, 11)
-                c.drawRightString(width - margin, y, ar("المستشار القانوني:"))
-                y -= 18
-                # Clean markdown
-                clean = content.replace("**", "").replace("##", "").replace("---", "")
-                y = draw_wrapped_text(clean, width - margin - 15, y, width - 2 * margin - 30, font_name, 11, "#333333")
-                y -= 15
+                pdf.set_font("Arabic", "", 10)
+                pdf.set_text_color(50, 50, 50)
+                for para in clean.split('\n'):
+                    para = para.strip()
+                    if para:
+                        pdf.multi_cell(0, 6, ar(para), align="R")
+                    else:
+                        pdf.ln(3)
+                pdf.ln(4)
 
-            # Page break if needed
-            if y < margin + 50:
-                c.showPage()
-                y = height - margin
+            # Light separator between messages
+            pdf.set_draw_color(200, 200, 200)
+            pdf.set_line_width(0.2)
+            pdf.line(20, pdf.get_y(), pdf.w - 20, pdf.get_y())
+            pdf.ln(4)
 
-        # Footer
-        c.setFillColor(HexColor("#888888"))
-        c.setFont(font_name, 8)
-        c.drawCentredString(width / 2, 20, ar("جامعة ديالى - رئاسة الجامعة © 2026"))
-
-        c.save()
+        buf = io.BytesIO()
+        pdf.output(buf)
         buf.seek(0)
         return buf.getvalue()
     except Exception as e:
