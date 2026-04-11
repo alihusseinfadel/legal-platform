@@ -1795,7 +1795,9 @@ def chat_to_pdf(messages, title="محادثة المستشار القانوني"
         _buf = io.BytesIO()
         pdf.output(_buf)
         return _buf.getvalue()
-    except Exception:
+    except Exception as _e:
+        import traceback
+        st.warning(f"تعذر توليد PDF: {_e}\n{traceback.format_exc()}")
         return None
 
 def chat_response_stream(api_key, question, history):
@@ -2429,7 +2431,15 @@ if (conv) conv.scrollTop = conv.scrollHeight;
                     key="pdf_export_main"
                 )
             else:
-                st.button("تصدير PDF", disabled=True, use_container_width=True, key="pdf_disabled_main2")
+                # PDF failed - show error details
+                st.download_button(
+                    label="تصدير PDF",
+                    data=text_export,
+                    file_name=f"محادثة_{datetime.datetime.now().strftime('%Y%m%d_%H%M')}.pdf.txt",
+                    mime="text/plain",
+                    use_container_width=True,
+                    key="pdf_fallback_main"
+                )
         with btn_c2:
             st.download_button(
                 label="تصدير نصي",
