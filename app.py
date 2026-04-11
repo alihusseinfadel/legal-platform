@@ -2402,35 +2402,37 @@ if (conv) conv.scrollTop = conv.scrollHeight;
         save_conversations(st.session_state.conversations)
         st.rerun()
 
-    # === Export PDF Button (ALWAYS visible) ===
+    # === Export Buttons (ALWAYS visible) ===
     st.markdown('<div style="margin-top:1rem;"></div>', unsafe_allow_html=True)
     has_msgs = len(current_conv.get("messages", [])) > 0
     if has_msgs:
         pdf_data = None
-        pdf_error = None
         try:
             pdf_data = chat_to_pdf(current_conv["messages"], current_conv.get("title", "محادثة"))
-        except Exception as e:
-            pdf_error = str(e)
+        except Exception:
+            pdf_data = None
 
-        if pdf_data and len(pdf_data) > 100:
+        text_export = ""
+        for m in current_conv["messages"]:
+            role = "المستخدم" if m["role"] == "user" else "المستشار"
+            text_export += f"\n{'='*40}\n{role}:\n{m['content']}\n"
+
+        btn_c1, btn_c2 = st.columns(2)
+        with btn_c1:
+            if pdf_data and len(pdf_data) > 100:
+                st.download_button(
+                    label="تصدير PDF",
+                    data=pdf_data,
+                    file_name=f"محادثة_{datetime.datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
+                    mime="application/pdf",
+                    use_container_width=True,
+                    key="pdf_export_main"
+                )
+            else:
+                st.button("تصدير PDF", disabled=True, use_container_width=True, key="pdf_disabled_main2")
+        with btn_c2:
             st.download_button(
-                label="تصدير المحادثة كـ PDF",
-                data=pdf_data,
-                file_name=f"محادثة_{datetime.datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
-                mime="application/pdf",
-                use_container_width=True,
-                key="pdf_export_main"
-            )
-        else:
-            if pdf_error:
-                st.error(f"خطأ في توليد PDF: {pdf_error}")
-            text_export = ""
-            for m in current_conv["messages"]:
-                role = "المستخدم" if m["role"] == "user" else "المستشار"
-                text_export += f"\n{'='*40}\n{role}:\n{m['content']}\n"
-            st.download_button(
-                label="تصدير المحادثة كملف نصي",
+                label="تصدير نصي",
                 data=text_export,
                 file_name=f"محادثة_{datetime.datetime.now().strftime('%Y%m%d_%H%M')}.txt",
                 mime="text/plain",
@@ -2438,7 +2440,11 @@ if (conv) conv.scrollTop = conv.scrollHeight;
                 key="txt_export_main"
             )
     else:
-        st.button("تصدير المحادثة كـ PDF", disabled=True, use_container_width=True, key="pdf_disabled_main")
+        btn_c1, btn_c2 = st.columns(2)
+        with btn_c1:
+            st.button("تصدير PDF", disabled=True, use_container_width=True, key="pdf_disabled_main")
+        with btn_c2:
+            st.button("تصدير نصي", disabled=True, use_container_width=True, key="txt_disabled_main")
 
 # --- Document Analysis ---
 elif page == "تحليل الوثائق":
