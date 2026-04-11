@@ -2429,20 +2429,40 @@ if (conv) conv.scrollTop = conv.scrollHeight;
         save_conversations(st.session_state.conversations)
         st.rerun()
 
-    # === Export PDF Button (always visible) ===
-    st.markdown("---")
-    if current_conv["messages"]:
-        pdf_data = chat_to_pdf(current_conv["messages"], current_conv.get("title", "محادثة"))
-        if pdf_data:
+    # === Export PDF Button (ALWAYS visible) ===
+    st.markdown('<div style="margin-top:1rem;"></div>', unsafe_allow_html=True)
+    has_msgs = len(current_conv.get("messages", [])) > 0
+    if has_msgs:
+        try:
+            pdf_data = chat_to_pdf(current_conv["messages"], current_conv.get("title", "محادثة"))
+        except Exception:
+            pdf_data = None
+
+        if pdf_data and len(pdf_data) > 100:
             st.download_button(
                 label="تصدير المحادثة كـ PDF",
                 data=pdf_data,
-                file_name=f"{current_conv.get('title', 'chat').replace(' ', '_')}.pdf",
+                file_name=f"محادثة_{datetime.datetime.now().strftime('%Y%m%d_%H%M')}.pdf",
                 mime="application/pdf",
-                use_container_width=True
+                use_container_width=True,
+                key="pdf_export_main"
+            )
+        else:
+            # PDF generation failed - offer text download as fallback
+            text_export = ""
+            for m in current_conv["messages"]:
+                role = "المستخدم" if m["role"] == "user" else "المستشار"
+                text_export += f"\n{'='*40}\n{role}:\n{m['content']}\n"
+            st.download_button(
+                label="تصدير المحادثة كملف نصي",
+                data=text_export,
+                file_name=f"محادثة_{datetime.datetime.now().strftime('%Y%m%d_%H%M')}.txt",
+                mime="text/plain",
+                use_container_width=True,
+                key="txt_export_main"
             )
     else:
-        st.button("تصدير المحادثة كـ PDF", disabled=True, use_container_width=True, help="ابدأ محادثة اولاً ثم يمكنك تصديرها")
+        st.button("تصدير المحادثة كـ PDF", disabled=True, use_container_width=True, key="pdf_disabled_main")
 
 # --- Document Analysis ---
 elif page == "تحليل الوثائق":
