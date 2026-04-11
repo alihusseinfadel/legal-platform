@@ -2429,20 +2429,20 @@ if (conv) conv.scrollTop = conv.scrollHeight;
         save_conversations(st.session_state.conversations)
         st.rerun()
 
-    # === Export PDF Button ===
+    # === Export PDF Button (always visible) ===
+    st.markdown("---")
     if current_conv["messages"]:
-        st.markdown("---")
-        exp_c1, exp_c2, exp_c3 = st.columns([1, 2, 1])
-        with exp_c2:
-            pdf_data = chat_to_pdf(current_conv["messages"], current_conv.get("title", "محادثة"))
-            if pdf_data:
-                st.download_button(
-                    label="📥 تصدير المحادثة كـ PDF",
-                    data=pdf_data,
-                    file_name=f"{current_conv.get('title', 'chat').replace(' ', '_')}.pdf",
-                    mime="application/pdf",
-                    use_container_width=True
-                )
+        pdf_data = chat_to_pdf(current_conv["messages"], current_conv.get("title", "محادثة"))
+        if pdf_data:
+            st.download_button(
+                label="تصدير المحادثة كـ PDF",
+                data=pdf_data,
+                file_name=f"{current_conv.get('title', 'chat').replace(' ', '_')}.pdf",
+                mime="application/pdf",
+                use_container_width=True
+            )
+    else:
+        st.button("تصدير المحادثة كـ PDF", disabled=True, use_container_width=True, help="ابدأ محادثة اولاً ثم يمكنك تصديرها")
 
 # --- Document Analysis ---
 elif page == "تحليل الوثائق":
