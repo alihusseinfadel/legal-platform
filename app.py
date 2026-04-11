@@ -2404,20 +2404,75 @@ if (conv) conv.scrollTop = conv.scrollHeight;
         save_conversations(st.session_state.conversations)
         st.rerun()
 
-    # === Export Buttons (ALWAYS visible) ===
+    # === Export Buttons ===
     st.markdown('<div style="margin-top:1rem;"></div>', unsafe_allow_html=True)
     has_msgs = len(current_conv.get("messages", [])) > 0
     if has_msgs:
-        pdf_data = None
-        try:
-            pdf_data = chat_to_pdf(current_conv["messages"], current_conv.get("title", "محادثة"))
-        except Exception:
-            pdf_data = None
+        # Generate PDF inline (not in separate function)
+        import re as _re
+        from fpdf import FPDF as _FPDF
+        import arabic_reshaper as _ar
+        from bidi.algorithm import get_display as _bidi
 
-        text_export = ""
-        for m in current_conv["messages"]:
-            role = "المستخدم" if m["role"] == "user" else "المستشار"
-            text_export += f"\n{'='*40}\n{role}:\n{m['content']}\n"
+        def _reshape(t):
+            try: return _bidi(_ar.reshape(str(t)))
+            except: return str(t)
+
+        try:
+            _pdf = _FPDF(orientation='P', unit='mm', format='A4')
+            _pdf.set_auto_page_break(auto=True, margin=15)
+            for _r, _b in [("C:/Windows/Fonts/tahoma.ttf","C:/Windows/Fonts/tahomabd.ttf"),("C:/Windows/Fonts/arial.ttf","C:/Windows/Fonts/arialbd.ttf")]:
+                if os.path.exists(_r):
+                    _pdf.add_font("Ar","",_r)
+                    _pdf.add_font("Ar","B",_b if os.path.exists(_b) else _r)
+                    break
+            _pdf.add_page()
+            _pw = _pdf.w - 20
+            _pdf.set_fill_color(139,26,26)
+            _pdf.rect(0,0,_pdf.w,20,'F')
+            _pdf.set_text_color(255,255,255)
+            _pdf.set_font("Ar","B",13)
+            _pdf.set_xy(10,4)
+            _pdf.cell(_pw,10,_reshape("منصة القانون الاداري - جامعة ديالى"),align="R")
+            _pdf.set_y(24)
+            _pdf.set_font("Ar","",8)
+            _pdf.set_text_color(130,130,130)
+            _pdf.set_x(10)
+            _pdf.cell(_pw,5,_reshape(datetime.datetime.now().strftime('%Y-%m-%d %H:%M')),align="R")
+            _pdf.ln(8)
+            _pdf.set_draw_color(139,26,26)
+            _pdf.line(10,_pdf.get_y(),_pdf.w-10,_pdf.get_y())
+            _pdf.ln(5)
+            for _msg in current_conv["messages"]:
+                _txt = _msg.get("content","")
+                if not _txt: continue
+                _txt = _re.sub(r'\*\*(.+?)\*\*',r'\1',_txt)
+                _txt = _txt.replace("**","").replace("##","").replace("---","").replace("*","")
+                _is_u = _msg.get("role")=="user"
+                _pdf.set_font("Ar","B",10)
+                _pdf.set_text_color(139,26,26) if _is_u else _pdf.set_text_color(80,40,40)
+                _pdf.set_x(10)
+                _pdf.cell(_pw,7,_reshape("المستخدم:" if _is_u else "المستشار القانوني:"),align="R")
+                _pdf.ln(7)
+                _pdf.set_font("Ar","",9)
+                _pdf.set_text_color(40,40,40)
+                for _ln in _txt.split('\n'):
+                    _ln = _ln.strip()
+                    if _ln:
+                        _pdf.set_x(10)
+                        _pdf.multi_cell(w=_pw,h=5.5,text=_reshape(_ln),align="R")
+                    else:
+                        _pdf.ln(2)
+                _pdf.ln(3)
+                _pdf.set_draw_color(210,210,210)
+                _pdf.line(15,_pdf.get_y(),_pdf.w-15,_pdf.get_y())
+                _pdf.ln(4)
+            _buf = io.BytesIO()
+            _pdf.output(_buf)
+            pdf_data = _buf.getvalue()
+        except Exception as _e:
+            pdf_data = None
+            st.error(f"خطأ PDF: {_e}")
 
         btn_c1, btn_c2 = st.columns(2)
         with btn_c1:
@@ -2431,16 +2486,12 @@ if (conv) conv.scrollTop = conv.scrollHeight;
                     key="pdf_export_main"
                 )
             else:
-                # PDF failed - show error details
-                st.download_button(
-                    label="تصدير PDF",
-                    data=text_export,
-                    file_name=f"محادثة_{datetime.datetime.now().strftime('%Y%m%d_%H%M')}.pdf.txt",
-                    mime="text/plain",
-                    use_container_width=True,
-                    key="pdf_fallback_main"
-                )
+                st.button("تصدير PDF (خطأ)", disabled=True, use_container_width=True, key="pdf_err")
         with btn_c2:
+            text_export = ""
+            for m in current_conv["messages"]:
+                role = "المستخدم" if m["role"] == "user" else "المستشار"
+                text_export += f"\n{'='*40}\n{role}:\n{m['content']}\n"
             st.download_button(
                 label="تصدير نصي",
                 data=text_export,
