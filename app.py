@@ -1724,8 +1724,8 @@ def chat_to_pdf(messages, title="محادثة المستشار القانوني"
         _ok = False
         for _r, _b in _fonts:
             if os.path.exists(_r):
-                pdf.add_font("Ar", "", _r)
-                pdf.add_font("Ar", "B", _b if os.path.exists(_b) else _r)
+                pdf.add_font("ar2", "", _r)
+                pdf.add_font("ar2", "B", _b if os.path.exists(_b) else _r)
                 _ok = True
                 break
         if not _ok:
@@ -1738,13 +1738,13 @@ def chat_to_pdf(messages, title="محادثة المستشار القانوني"
         pdf.set_fill_color(139, 26, 26)
         pdf.rect(0, 0, pdf.w, 20, 'F')
         pdf.set_text_color(255, 255, 255)
-        pdf.set_font("Ar", "B", 13)
+        pdf.set_font("ar2", "B", 13)
         pdf.set_xy(10, 4)
         pdf.cell(_w, 10, _reshape("منصة القانون الاداري - جامعة ديالى"), align="R")
         pdf.set_y(24)
 
         # Date
-        pdf.set_font("Ar", "", 8)
+        pdf.set_font("ar2", "", 8)
         pdf.set_text_color(130, 130, 130)
         pdf.set_x(10)
         pdf.cell(_w, 5, _reshape(datetime.datetime.now().strftime('%Y-%m-%d %H:%M')), align="R")
@@ -1767,7 +1767,7 @@ def chat_to_pdf(messages, title="محادثة المستشار القانوني"
 
             # Role label
             is_user = msg.get("role") == "user"
-            pdf.set_font("Ar", "B", 10)
+            pdf.set_font("ar2", "B", 10)
             pdf.set_text_color(139, 26, 26) if is_user else pdf.set_text_color(80, 40, 40)
             pdf.set_x(10)
             label = "المستخدم:" if is_user else "المستشار القانوني:"
@@ -1775,7 +1775,7 @@ def chat_to_pdf(messages, title="محادثة المستشار القانوني"
             pdf.ln(7)
 
             # Content
-            pdf.set_font("Ar", "", 9)
+            pdf.set_font("ar2", "", 9)
             pdf.set_text_color(40, 40, 40)
             for line in txt.split('\n'):
                 line = line.strip()
@@ -2423,19 +2423,19 @@ if (conv) conv.scrollTop = conv.scrollHeight;
             _pdf.set_auto_page_break(auto=True, margin=15)
             for _r, _b in [("C:/Windows/Fonts/tahoma.ttf","C:/Windows/Fonts/tahomabd.ttf"),("C:/Windows/Fonts/arial.ttf","C:/Windows/Fonts/arialbd.ttf")]:
                 if os.path.exists(_r):
-                    _pdf.add_font("Ar","",_r)
-                    _pdf.add_font("Ar","B",_b if os.path.exists(_b) else _r)
+                    _pdf.add_font("xar","",_r)
+                    _pdf.add_font("xar","B",_b if os.path.exists(_b) else _r)
                     break
             _pdf.add_page()
             _pw = _pdf.w - 20
             _pdf.set_fill_color(139,26,26)
             _pdf.rect(0,0,_pdf.w,20,'F')
             _pdf.set_text_color(255,255,255)
-            _pdf.set_font("Ar","B",13)
+            _pdf.set_font("xar","B",13)
             _pdf.set_xy(10,4)
             _pdf.cell(_pw,10,_reshape("منصة القانون الاداري - جامعة ديالى"),align="R")
             _pdf.set_y(24)
-            _pdf.set_font("Ar","",8)
+            _pdf.set_font("xar","",8)
             _pdf.set_text_color(130,130,130)
             _pdf.set_x(10)
             _pdf.cell(_pw,5,_reshape(datetime.datetime.now().strftime('%Y-%m-%d %H:%M')),align="R")
@@ -2449,12 +2449,12 @@ if (conv) conv.scrollTop = conv.scrollHeight;
                 _txt = _re.sub(r'\*\*(.+?)\*\*',r'\1',_txt)
                 _txt = _txt.replace("**","").replace("##","").replace("---","").replace("*","")
                 _is_u = _msg.get("role")=="user"
-                _pdf.set_font("Ar","B",10)
+                _pdf.set_font("xar","B",10)
                 _pdf.set_text_color(139,26,26) if _is_u else _pdf.set_text_color(80,40,40)
                 _pdf.set_x(10)
                 _pdf.cell(_pw,7,_reshape("المستخدم:" if _is_u else "المستشار القانوني:"),align="R")
                 _pdf.ln(7)
-                _pdf.set_font("Ar","",9)
+                _pdf.set_font("xar","",9)
                 _pdf.set_text_color(40,40,40)
                 for _ln in _txt.split('\n'):
                     _ln = _ln.strip()
