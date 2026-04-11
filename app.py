@@ -1740,11 +1740,11 @@ def chat_to_pdf(messages, title="محادثة المستشار القانوني"
         for regular, bold in font_paths:
             if os.path.exists(regular):
                 try:
-                    pdf.add_font("Arabic", "", regular, uni=True)
+                    pdf.add_font("Arabic", "", regular)
                     if os.path.exists(bold):
-                        pdf.add_font("Arabic", "B", bold, uni=True)
+                        pdf.add_font("Arabic", "B", bold)
                     else:
-                        pdf.add_font("Arabic", "B", regular, uni=True)
+                        pdf.add_font("Arabic", "B", regular)
                     font_registered = True
                     break
                 except Exception:
