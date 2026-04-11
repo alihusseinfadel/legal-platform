@@ -1704,34 +1704,18 @@ def chat_to_pdf(messages, title="محادثة المستشار القانوني"
         from fpdf import FPDF
         import arabic_reshaper
         from bidi.algorithm import get_display
+        import re
 
         def ar(text):
-            """Reshape and reorder Arabic text for correct PDF display"""
             try:
                 reshaped = arabic_reshaper.reshape(str(text))
                 return get_display(reshaped)
             except Exception:
                 return str(text)
 
-        class ArabicPDF(FPDF):
-            def header(self):
-                self.set_fill_color(139, 26, 26)
-                self.rect(0, 0, self.w, 22, 'F')
-                self.set_text_color(255, 255, 255)
-                self.set_font("Arabic", "B", 14)
-                self.set_xy(10, 5)
-                self.cell(self.w - 20, 12, ar("منصة القانون الاداري - جامعة ديالى"), align="R")
-
-            def footer(self):
-                self.set_y(-12)
-                self.set_font("Arabic", "", 7)
-                self.set_text_color(150, 150, 150)
-                self.cell(0, 10, ar(f"جامعة ديالى - رئاسة الجامعة © 2026 | صفحة {self.page_no()}"), align="C")
-
-        pdf = ArabicPDF(orientation='P', unit='mm', format='A4')
+        pdf = FPDF(orientation='P', unit='mm', format='A4')
         pdf.set_auto_page_break(auto=True, margin=18)
 
-        # Register Arabic font (Tahoma or Arial)
         font_paths = [
             ("C:/Windows/Fonts/tahoma.ttf", "C:/Windows/Fonts/tahomabd.ttf"),
             ("C:/Windows/Fonts/arial.ttf", "C:/Windows/Fonts/arialbd.ttf"),
@@ -1741,78 +1725,64 @@ def chat_to_pdf(messages, title="محادثة المستشار القانوني"
             if os.path.exists(regular):
                 try:
                     pdf.add_font("Arabic", "", regular)
-                    if os.path.exists(bold):
-                        pdf.add_font("Arabic", "B", bold)
-                    else:
-                        pdf.add_font("Arabic", "B", regular)
+                    pdf.add_font("Arabic", "B", bold if os.path.exists(bold) else regular)
                     font_registered = True
                     break
                 except Exception:
                     continue
-
         if not font_registered:
             return None
 
         pdf.add_page()
 
+        # Header
+        pdf.set_fill_color(139, 26, 26)
+        pdf.rect(0, 0, pdf.w, 22, 'F')
+        pdf.set_text_color(255, 255, 255)
+        pdf.set_font("Arabic", "B", 14)
+        pdf.set_xy(10, 5)
+        pdf.cell(pdf.w - 20, 12, ar("منصة القانون الاداري - جامعة ديالى"), align="R")
+        pdf.ln(22)
+
         # Title and date
-        pdf.set_font("Arabic", "B", 12)
+        pdf.set_font("Arabic", "B", 11)
         pdf.set_text_color(139, 26, 26)
-        pdf.ln(18)
-        pdf.cell(0, 8, ar(title), align="R", new_x="LMARGIN", new_y="NEXT")
+        pdf.set_x(10)
+        pdf.cell(pdf.w - 20, 8, ar(title), align="R", new_x="LMARGIN", new_y="NEXT")
         pdf.set_font("Arabic", "", 8)
         pdf.set_text_color(120, 120, 120)
-        pdf.cell(0, 5, ar(f"التاريخ: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}"), align="R", new_x="LMARGIN", new_y="NEXT")
-
-        # Separator line
+        pdf.set_x(10)
+        pdf.cell(pdf.w - 20, 5, ar(f"التاريخ: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M')}"), align="R", new_x="LMARGIN", new_y="NEXT")
         pdf.set_draw_color(139, 26, 26)
         pdf.set_line_width(0.5)
         pdf.line(10, pdf.get_y() + 2, pdf.w - 10, pdf.get_y() + 2)
         pdf.ln(6)
 
         for msg in messages:
-            role = msg.get("role", "")
             content = msg.get("content", "")
             if not content:
                 continue
+            clean = re.sub(r'\*\*(.+?)\*\*', r'\1', content)
+            clean = clean.replace("**", "").replace("##", "").replace("---", "")
 
-            # Clean markdown
-            import re
-            clean = content.replace("**", "").replace("##", "").replace("---", "")
-            clean = re.sub(r'\*\*(.+?)\*\*', r'\1', clean)
+            role_name = "المستخدم" if msg.get("role") == "user" else "المستشار القانوني"
+            color = (139, 26, 26) if msg.get("role") == "user" else (100, 50, 50)
 
-            if role == "user":
-                # User label
-                pdf.set_font("Arabic", "B", 10)
-                pdf.set_text_color(139, 26, 26)
-                pdf.cell(0, 7, ar("المستخدم:"), align="R", new_x="LMARGIN", new_y="NEXT")
-                # User message
-                pdf.set_font("Arabic", "", 10)
-                pdf.set_text_color(50, 50, 50)
-                for para in clean.split('\n'):
-                    para = para.strip()
-                    if para:
-                        pdf.multi_cell(0, 6, ar(para), align="R")
-                    else:
-                        pdf.ln(3)
-                pdf.ln(4)
-            else:
-                # Bot label
-                pdf.set_font("Arabic", "B", 10)
-                pdf.set_text_color(100, 50, 50)
-                pdf.cell(0, 7, ar("المستشار القانوني:"), align="R", new_x="LMARGIN", new_y="NEXT")
-                # Bot message
-                pdf.set_font("Arabic", "", 10)
-                pdf.set_text_color(50, 50, 50)
-                for para in clean.split('\n'):
-                    para = para.strip()
-                    if para:
-                        pdf.multi_cell(0, 6, ar(para), align="R")
-                    else:
-                        pdf.ln(3)
-                pdf.ln(4)
+            pdf.set_font("Arabic", "B", 10)
+            pdf.set_text_color(*color)
+            pdf.set_x(10)
+            pdf.cell(pdf.w - 20, 7, ar(role_name + ":"), align="R", new_x="LMARGIN", new_y="NEXT")
 
-            # Light separator between messages
+            pdf.set_font("Arabic", "", 10)
+            pdf.set_text_color(50, 50, 50)
+            for para in clean.split('\n'):
+                para = para.strip()
+                if para:
+                    pdf.set_x(10)
+                    pdf.multi_cell(w=pdf.w - 20, h=6, text=ar(para), align="R")
+                else:
+                    pdf.ln(3)
+            pdf.ln(4)
             pdf.set_draw_color(200, 200, 200)
             pdf.set_line_width(0.2)
             pdf.line(20, pdf.get_y(), pdf.w - 20, pdf.get_y())
@@ -1822,7 +1792,7 @@ def chat_to_pdf(messages, title="محادثة المستشار القانوني"
         pdf.output(buf)
         buf.seek(0)
         return buf.getvalue()
-    except Exception as e:
+    except Exception:
         return None
 
 def chat_response_stream(api_key, question, history):
