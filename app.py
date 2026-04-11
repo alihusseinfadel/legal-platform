@@ -1715,11 +1715,12 @@ def chat_to_pdf(messages, title="محادثة المستشار القانوني"
         pdf = _FPDF(orientation='P', unit='mm', format='A4')
         pdf.set_auto_page_break(auto=True, margin=15)
 
-        # Try fonts
+        # Try fonts - local first, then system
         _fonts = [
-            ("C:/Windows/Fonts/tahoma.ttf", "C:/Windows/Fonts/tahomabd.ttf"),
-            ("C:/Windows/Fonts/arial.ttf", "C:/Windows/Fonts/arialbd.ttf"),
-            ("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"),
+            (os.path.join(os.path.dirname(os.path.abspath(__file__)), "tahoma.ttf"), ""),
+            ("C:/Windows/Fonts/tahoma.ttf", ""),
+            ("C:/Windows/Fonts/arial.ttf", ""),
+            ("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", ""),
         ]
         _ok = False
         for _r, _b in _fonts:
@@ -2421,7 +2422,7 @@ if (conv) conv.scrollTop = conv.scrollHeight;
         try:
             _pdf = _FPDF(orientation='P', unit='mm', format='A4')
             _pdf.set_auto_page_break(auto=True, margin=15)
-            for _r, _b in [("C:/Windows/Fonts/tahoma.ttf","C:/Windows/Fonts/tahomabd.ttf"),("C:/Windows/Fonts/arial.ttf","C:/Windows/Fonts/arialbd.ttf")]:
+            for _r, _b in [(os.path.join(APP_DIR,"tahoma.ttf"),os.path.join(APP_DIR,"tahoma.ttf")),("C:/Windows/Fonts/tahoma.ttf","C:/Windows/Fonts/tahoma.ttf"),("C:/Windows/Fonts/arial.ttf","C:/Windows/Fonts/arial.ttf")]:
                 if os.path.exists(_r):
                     _pdf.add_font("xar","",_r)
                     pass
